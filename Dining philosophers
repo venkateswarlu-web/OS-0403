@@ -1,0 +1,49 @@
+#include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+
+#define N 5
+
+sem_t fork[N];
+pthread_t phil[N];
+int id[N] = {0,1,2,3,4};
+
+void *philosopher(void *arg)
+{
+    int i = *(int *)arg;
+    int left = i;
+    int right = (i + 1) % N;
+
+    while (1)
+    {
+        printf("Philosopher %d is Thinking\n", i);
+        sleep(1);
+
+        sem_wait(&fork[left]);
+        sem_wait(&fork[right]);
+
+        printf("Philosopher %d is Eating\n", i);
+        sleep(2);
+
+        sem_post(&fork[right]);
+        sem_post(&fork[left]);
+    }
+}
+
+int main()
+{
+    int i;
+
+    for (i = 0; i < N; i++)
+        sem_init(&fork[i], 0, 1);
+
+    for (i = 0; i < N; i++)
+        pthread_create(&phil[i], NULL, philosopher, &id[i]);
+
+    for (i = 0; i < N; i++)
+        pthread_join(phil[i], NULL);
+
+    return 0;
+}
+
